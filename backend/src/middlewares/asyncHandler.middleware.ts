@@ -4,7 +4,7 @@ type AsyncHandlerMiddleware = (
     req: Request, 
     res: Response, 
     next: NextFunction
-) => Promise<void>;
+) => Promise<any>;
 
 export const asyncHandler = (fn: AsyncHandlerMiddleware) => {
     return async (req: Request, res: Response, next: NextFunction) => {
