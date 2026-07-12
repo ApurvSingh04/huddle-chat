@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  
+  messages  Message[]
+
+  chatIds   String[] @db.ObjectId
+  chats     Chat[]   @relation("ChatParticipants", fields: [chatIds], references: [id])
+  
+  chatsCreated Chat[] @relation("ChatCreator")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  content   String?
+  image     String?
+
+  chatId    String   @db.ObjectId
+  chat      Chat     @relation("ChatMessages", fields: [chatId], references: [id])
+
+  senderId  String   @db.ObjectId
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  replyToId String?  @db.ObjectId
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies   Message[] @relation("MessageReplies")
+
+  chatLastMessage Chat[] @relation("ChatLastMessage")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  
+  isGroup   Boolean   @default(false)
+  groupName String?   
+
+  participantIds String[] @db.ObjectId
+  participants   User[]   @relation("ChatParticipants", fields: [participantIds], references: [id])
+
+  lastMessageId  String?  @db.ObjectId
+  lastMessage    Message? @relation("ChatLastMessage", fields: [lastMessageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  createdById    String   @db.ObjectId
+  createdBy      User     @relation("ChatCreator", fields: [createdById], references: [id])
+
+  messages  Message[] @relation("ChatMessages")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
