@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { UnauthorizedException } from "../utils/app-error.js";
 import { Env } from "./env-config.js";
-import { prisma } from "./database.config.js";
+import { findByIdUserService } from "../services/user.service.js";
 import type { Request } from "express";
 
 passport.use(
@@ -25,9 +25,7 @@ passport.use(
           return done(null, false);
         }
         
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-        });
+        const user= userId && (await findByIdUserService(userId));
         
         return done(null, user || false);
       } catch (error) {
