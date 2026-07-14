@@ -20,3 +20,23 @@ export const findByIdUserService = async (userId: string) => {
     }
     return user;
 }
+
+export const getUsersService = async (userId: string) => {
+    const users = await prisma.user.findMany({
+        where: {
+            id: {
+                not: userId
+            }
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            createdAt: true,
+            updatedAt: true,
+        }
+    });
+
+    return users;
+}

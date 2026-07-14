@@ -11,7 +11,7 @@ import { HTTPSTATUS } from "./config/http-config.js";
 import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 import connectDatabase from "./config/database.config.js";
 // import { initializeSocket } from "./lib/socket.js"; // Uncomment when socket is implemented
-import authRoutes from "./routes/auth.route.js";
+import appRoutes from "./routes/index.js";
 
 import "./config/passport.config.js";
 
@@ -43,7 +43,7 @@ app.get(
   })
 );
 
-app.use("/api/auth", authRoutes);
+app.use("/api", appRoutes);
 
 if (Env.NODE_ENV === "production") {
   const clientPath = path.resolve(process.cwd(), "../client/dist");
@@ -51,7 +51,7 @@ if (Env.NODE_ENV === "production") {
   //Serve static files
   app.use(express.static(clientPath));
 
-  app.get(/^(?!\/api).*/, (req: Request, res: Response) => {
+  app.get("*", (req: Request, res: Response) => {
     res.sendFile(path.join(clientPath, "index.html"));
   });
 }
