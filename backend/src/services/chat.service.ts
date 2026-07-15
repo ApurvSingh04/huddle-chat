@@ -1,7 +1,7 @@
 import type { CreateChatSchemaType } from "../validators/chat.validator.js";
 import { prisma } from "../config/database.config.js";
 import { BadRequestException, NotFoundException } from "../utils/app-error.js";
-// import { emitNewChatToParticpants } from "../lib/socket.js"; // Uncomment when socket is implemented
+import { emitNewChatToParticpants } from "../lib/socket.js";
 
 export const createChatService = async (
   userId: string,
@@ -33,7 +33,6 @@ export const createChatService = async (
 
     allParticipantIds = [userId, participantId];
     
-    // Find existing chat with exactly these two participants
     const existingChat = await prisma.chat.findFirst({
       where: {
         isGroup: false,
@@ -64,13 +63,10 @@ export const createChatService = async (
     });
   }
 
-  // Implement websocket
-  /*
   const particpantIdStrings = chat?.participants?.map((p) => p.id);
   if (particpantIdStrings) {
-    // emitNewChatToParticpants(particpantIdStrings, chat);
+    emitNewChatToParticpants(particpantIdStrings, chat);
   }
-  */
 
   return chat;
 };

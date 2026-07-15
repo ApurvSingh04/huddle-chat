@@ -2,6 +2,10 @@ import { prisma } from "../config/database.config.js";
 import { BadRequestException } from "../utils/app-error.js";
 import type { SendMessageSchemaType } from "../validators/message.validator.js";
 import cloudinary from "../config/cloudinary.config.js";
+import {
+  emitLastMessageToParticipants,
+  emitNewMessageToChatRoom,
+} from "../lib/socket.js";
 
 export const sendMessageService = async (
   userId: string,
@@ -25,7 +29,6 @@ export const sendMessageService = async (
   let imageUrl = image || null;
 
   if (image) {
-    // upload the image to cloudinary
     const uploadRes = await cloudinary.uploader.upload(image);
     imageUrl = uploadRes.secure_url;
   }
@@ -60,6 +63,10 @@ export const sendMessageService = async (
       lastMessageId: message.id,
     },
   });
+
+  emitNewMessageToChatRoom(userId, chatId, message);
+  const allParticipantIds = chat.participantIds;
+  emitLastMessageToParticipants(allParticipantIds, chatId, message);
 
   return { message };
 };

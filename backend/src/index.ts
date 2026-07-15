@@ -10,16 +10,15 @@ import { asyncHandler } from "./middlewares/asyncHandler.middleware.js";
 import { HTTPSTATUS } from "./config/http-config.js";
 import { errorHandler } from "./middlewares/errorHandler.middleware.js";
 import connectDatabase from "./config/database.config.js";
-// import { initializeSocket } from "./lib/socket.js"; // Uncomment when socket is implemented
+import { initializeSocket } from "./lib/socket.js"
 import appRoutes from "./routes/index.js";
-
 import "./config/passport.config.js";
 
 const app = express();
 const server = http.createServer(app);
 
 //socket
-// initializeSocket(server); // Uncomment when socket is implemented
+initializeSocket(server);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
