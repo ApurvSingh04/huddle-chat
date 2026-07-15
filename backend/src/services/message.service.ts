@@ -1,6 +1,7 @@
 import { prisma } from "../config/database.config.js";
 import { BadRequestException } from "../utils/app-error.js";
 import type { SendMessageSchemaType } from "../validators/message.validator.js";
+import cloudinary from "../config/cloudinary.config.js";
 
 export const sendMessageService = async (
   userId: string,
@@ -21,13 +22,21 @@ export const sendMessageService = async (
     throw new BadRequestException("Chat not found or you are not a participant");
   }
 
+  let imageUrl = image || null;
+
+  if (image) {
+    // upload the image to cloudinary
+    const uploadRes = await cloudinary.uploader.upload(image);
+    imageUrl = uploadRes.secure_url;
+  }
+
   const message = await prisma.message.create({
     data: {
-      content: content ?? null,
-      image: image ?? null,
+      content: content || null,
+      image: imageUrl,
       chatId,
       senderId: userId,
-      replyToId: replyToId ?? null,
+      replyToId: replyToId || null,
     },
     include: {
       sender: {
