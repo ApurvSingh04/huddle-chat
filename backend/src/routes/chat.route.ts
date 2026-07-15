@@ -5,12 +5,12 @@ import {
   getSingleChatController,
   getUserChatsController,
 } from "../controllers/chat.controller.js";
-// import { sendMessageController } from "../controllers/message.controller.js";
+import { sendMessageController } from "../controllers/message.controller.js";
 
 const chatRoutes = Router()
   .use(passportAuthenticateJwt)
   .post("/create", createChatController)
-  // .post("/message/send", sendMessageController) // Uncomment when message controller is implemented
+  .post("/message/send", sendMessageController) 
   .get("/all", getUserChatsController)
   .get("/:id", getSingleChatController);
 
