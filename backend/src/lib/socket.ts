@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { Server, type Socket } from "socket.io";
 import { Env } from "../config/env-config.js";
 import { validateChatParticipant } from "../services/chat.service.js";
+import { prisma } from "../config/database.config.js";
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -27,7 +28,9 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
       if (!rawCookie) return next(new Error("Unauthorized"));
 
-      const token = rawCookie?.split("=")?.[1]?.trim();
+      const match = rawCookie.match(/(?:^|;\s*)accessToken=([^;]+)/);
+      const token = match ? match[1] : null;
+
       if (!token) return next(new Error("Unauthorized"));
 
       const decodedToken = jwt.verify(token, Env.JWT_SECRET) as {
@@ -77,6 +80,43 @@ export const initializeSocket = (httpServer: HTTPServer) => {
         console.log(`User ${userId} left room chat:${chatId}`);
       }
     });
+
+    socket.on("typing:start", (chatId: string) => {
+      if (chatId) {
+        socket.to(`chat:${chatId}`).emit("typing:start", { chatId, userId });
+      }
+    });
+
+    socket.on("typing:stop", (chatId: string) => {
+      if (chatId) {
+        socket.to(`chat:${chatId}`).emit("typing:stop", { chatId, userId });
+      }
+    });
+
+    socket.on(
+      "message:read",
+      async ({ chatId, messageIds }: { chatId: string; messageIds: string[] }) => {
+        try {
+          if (messageIds?.length > 0) {
+            await prisma.$transaction(
+              messageIds.map((id) =>
+                prisma.message.update({
+                  where: { id },
+                  data: { readByIds: { push: userId } },
+                })
+              )
+            );
+            socket.to(`chat:${chatId}`).emit("message:read", {
+              chatId,
+              messageIds,
+              readByUserId: userId,
+            });
+          }
+        } catch (err) {
+          console.error("Error updating read status", err);
+        }
+      }
+    );
 
     socket.on("disconnect", () => {
       if (onlineUsers.get(userId) === newSocketId) {
