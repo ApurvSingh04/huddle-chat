@@ -11,10 +11,12 @@ export const registerController = asyncHandler(
 
     const user = await registerService(body);
     const userId = user.id;
+    const tokenVersion = user.tokenVersion;
 
     return setJwtAuthCookie({
       res,
       userId,
+      tokenVersion,
     })
       .status(HTTPSTATUS.CREATED)
       .json({
@@ -30,10 +32,12 @@ export const loginController = asyncHandler(
 
     const user = await loginService(body);
     const userId = user.id;
+    const tokenVersion = user.tokenVersion;
     
     return setJwtAuthCookie({
       res,
       userId,
+      tokenVersion,
     })
       .status(HTTPSTATUS.OK)
       .json({

@@ -11,7 +11,7 @@ interface AuthenticatedSocket extends Socket {
 
 let io: Server | null = null;
 
-const onlineUsers = new Map<string, string>();
+const onlineUsers = new Map<string, Set<string>>();
 
 export const initializeSocket = (httpServer: HTTPServer) => {
   io = new Server(httpServer, {
@@ -35,8 +35,18 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
       const decodedToken = jwt.verify(token, Env.JWT_SECRET) as {
         userId: string;
+        tokenVersion: number;
       };
-      if (!decodedToken) return next(new Error("Unauthorized"));
+      if (!decodedToken || !decodedToken.userId) return next(new Error("Unauthorized"));
+
+      const user = await prisma.user.findUnique({
+        where: { id: decodedToken.userId },
+        select: { tokenVersion: true },
+      });
+
+      if (!user || user.tokenVersion !== decodedToken.tokenVersion) {
+        return next(new Error("Unauthorized"));
+      }
 
       socket.userId = decodedToken.userId;
       next();
@@ -53,7 +63,10 @@ export const initializeSocket = (httpServer: HTTPServer) => {
       return;
     }
 
-    onlineUsers.set(userId, newSocketId);
+    if (!onlineUsers.has(userId)) {
+      onlineUsers.set(userId, new Set());
+    }
+    onlineUsers.get(userId)!.add(newSocketId);
 
     io?.emit("online:users", Array.from(onlineUsers.keys()));
 
@@ -119,16 +132,20 @@ export const initializeSocket = (httpServer: HTTPServer) => {
     );
 
     socket.on("disconnect", () => {
-      if (onlineUsers.get(userId) === newSocketId) {
-        if (userId) onlineUsers.delete(userId);
-
-        io?.emit("online:users", Array.from(onlineUsers.keys()));
-
-        console.log("socket disconnected", {
-          userId,
-          newSocketId,
-        });
+      const userSockets = onlineUsers.get(userId);
+      if (userSockets) {
+        userSockets.delete(newSocketId);
+        if (userSockets.size === 0) {
+          onlineUsers.delete(userId);
+        }
       }
+
+      io?.emit("online:users", Array.from(onlineUsers.keys()));
+
+      console.log("socket disconnected", {
+        userId,
+        newSocketId,
+      });
     });
   });
 };
@@ -137,6 +154,12 @@ function getIO() {
   if (!io) throw new Error("Socket.IO not initialized");
   return io;
 }
+
+export const logoutAllUserSockets = (userId: string) => {
+  if (!io) return;
+  io.to(`user:${userId}`).emit("force:logout");
+  io.in(`user:${userId}`).disconnectSockets(true);
+};
 
 export const emitNewChatToParticpants = (
   participantIds: string[] = [],
@@ -154,17 +177,7 @@ export const emitNewMessageToChatRoom = (
   message: any
 ) => {
   const io = getIO();
-  const senderSocketId = onlineUsers.get(senderId?.toString());
-
-  console.log(senderId, "senderId");
-  console.log(senderSocketId, "sender socketid exist");
-  console.log("All online users:", Object.fromEntries(onlineUsers));
-
-  if (senderSocketId) {
-    io.to(`chat:${chatId}`).except(senderSocketId).emit("message:new", message);
-  } else {
-    io.to(`chat:${chatId}`).emit("message:new", message);
-  }
+  io.to(`chat:${chatId}`).emit("message:new", message);
 };
 
 export const emitLastMessageToParticipants = (

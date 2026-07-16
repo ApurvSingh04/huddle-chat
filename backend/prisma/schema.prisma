@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   password  String
   avatar    String?
+  tokenVersion Int @default(0)
   
   messages  Message[]
 

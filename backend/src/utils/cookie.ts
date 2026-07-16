@@ -6,10 +6,11 @@ type Time = `${number}${"s" | "m" | "h" | "d" | "w" | "y"}`;
 type Cookie = {
   res: Response;
   userId: string;
+  tokenVersion: number;
 };
 
-export const setJwtAuthCookie = ({ res, userId }: Cookie) => {
-    const payload = { userId };
+export const setJwtAuthCookie = ({ res, userId, tokenVersion }: Cookie) => {
+    const payload = { userId, tokenVersion };
     const expiresIn = Env.JWT_EXPIRES_IN as Time;
     const token = jwt.sign(payload, Env.JWT_SECRET, {
     audience: ["user"],

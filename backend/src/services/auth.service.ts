@@ -28,6 +28,7 @@ export const registerService = async (body: RegisterSchemaType) => {
             name: true,
             email: true,
             avatar: true,
+            tokenVersion: true,
             createdAt: true,
             updatedAt: true,
         }
@@ -35,6 +36,8 @@ export const registerService = async (body: RegisterSchemaType) => {
     
     return newUser;
 };
+
+import { logoutAllUserSockets } from "../lib/socket.js";
 
 export const loginService = async (body: LoginType) => {
     const { email, password } = body;
@@ -50,7 +53,13 @@ export const loginService = async (body: LoginType) => {
     if (!isMatch) {
         throw new UnauthorizedException("Invalid email or password");
     }
+    const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { tokenVersion: { increment: 1 } },
+    });
     
-    const { password: _, ...safeUser } = user;
+    logoutAllUserSockets(user.id);
+    
+    const { password: _, ...safeUser } = updatedUser;
     return safeUser;
 };

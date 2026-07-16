@@ -19,7 +19,7 @@ passport.use(
       audience: ["user"],
       algorithms: ["HS256"],
     },
-    async ({ userId }, done) => {
+    async ({ userId, tokenVersion }, done) => {
       try {
         if (!userId) {
           return done(null, false);
@@ -27,7 +27,11 @@ passport.use(
         
         const user= userId && (await findByIdUserService(userId));
         
-        return done(null, user || false);
+        if (!user || user.tokenVersion !== tokenVersion) {
+          return done(null, false);
+        }
+
+        return done(null, user);
       } catch (error) {
         return done(error, false);
       }
