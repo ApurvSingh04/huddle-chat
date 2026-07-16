@@ -26,7 +26,7 @@ const AsideBar = () => {
       className="
   top-0 fixed inset-y-0
   w-11 left-0 z-50
-  h-svh bg-primary/85 shadow-sm"
+  h-svh bg-primary/85 dark:bg-card dark:border-r border-border shadow-sm"
     >
       <div
         className="
