@@ -1,0 +1,28 @@
+import { Link } from "react-router-dom";
+import logoPng from "@/assets/logo.png";
+import { cn } from "@/lib/utils";
+
+interface LogoProps {
+  url?: string;
+  showText?: boolean;
+  imgClass?: string;
+  textClass?: string;
+}
+
+const Logo = ({
+  url = "/",
+  showText = true,
+  imgClass = "size-[30px]",
+  textClass,
+}: LogoProps) => (
+  <Link to={url} className="flex items-center gap-2 w-fit">
+    <img src={logoPng} alt="Huddle" className={cn(imgClass)} />
+    {showText && (
+      <span className={cn("font-semibold text-lg leading-tight", textClass)}>
+        Huddle.
+      </span>
+    )}
+  </Link>
+);
+
+export default Logo;
