@@ -41,6 +41,8 @@ model Message {
   replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies   Message[] @relation("MessageReplies")
 
+  readByIds String[] @db.ObjectId
+
   chatLastMessage Chat[] @relation("ChatLastMessage")
 
   createdAt DateTime @default(now())
