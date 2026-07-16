@@ -35,6 +35,16 @@ export const useSocket = create<SocketState>()((set, get) => ({
       console.log("Online users", userIds);
       set({ onlineUsers: userIds });
     });
+
+    newSocket.on("force:logout", () => {
+      window.location.href = "/";
+    });
+
+    newSocket.on("connect_error", (err) => {
+      if (err.message === "Unauthorized") {
+        window.location.href = "/";
+      }
+    });
   },
   disconnectSocket: () => {
     const { socket } = get();

@@ -12,9 +12,8 @@ function App() {
   const isAuth = isAuthRoute(pathname);
 
   useEffect(() => {
-    if (isAuth) return;
     isAuthStatus();
-  }, [isAuthStatus, isAuth]);
+  }, [isAuthStatus]);
 
   if (isAuthStatusLoading && !user) {
     return (
