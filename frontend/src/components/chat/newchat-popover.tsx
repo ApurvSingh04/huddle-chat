@@ -22,6 +22,7 @@ export const NewChatPopover = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
@@ -43,6 +44,7 @@ export const NewChatPopover = memo(() => {
   const resetState = () => {
     setIsGroupMode(false);
     setGroupName("");
+    setSearchQuery("");
     setSelectedUsers([]);
   };
 
@@ -115,9 +117,9 @@ export const NewChatPopover = memo(() => {
 
           <InputGroup>
             <InputGroupInput
-              value={isGroupMode ? groupName : ""}
+              value={isGroupMode ? groupName : searchQuery}
               onChange={
-                isGroupMode ? (e) => setGroupName(e.target.value) : undefined
+                isGroupMode ? (e) => setGroupName(e.target.value) : (e) => setSearchQuery(e.target.value)
               }
               placeholder={isGroupMode ? "Enter group name" : "Search name"}
             />
@@ -134,17 +136,26 @@ export const NewChatPopover = memo(() => {
         >
           {isUsersLoading ? (
             <Spinner className="w-6 h-6" />
-          ) : users && users?.length === 0 ? (
-            <div className="text-center text-muted-foreground">
-              No users found
-            </div>
-          ) : !isGroupMode ? (
-            <>
-              <NewGroupItem
-                disabled={isCreatingChat}
-                onClick={() => setIsGroupMode(true)}
-              />
-              {users?.map((user) => (
+          ) : (() => {
+            const filteredUsers = users?.filter((u) => 
+              u.name.toLowerCase().includes(searchQuery.toLowerCase())
+            ) || [];
+            
+            if (filteredUsers.length === 0) {
+              return (
+                <div className="text-center text-muted-foreground">
+                  No users found
+                </div>
+              );
+            }
+
+            return !isGroupMode ? (
+              <>
+                <NewGroupItem
+                  disabled={isCreatingChat}
+                  onClick={() => setIsGroupMode(true)}
+                />
+                {filteredUsers.map((user) => (
                 <ChatUserItem
                   key={user._id}
                   user={user}
@@ -154,16 +165,16 @@ export const NewChatPopover = memo(() => {
                 />
               ))}
             </>
-          ) : (
-            users?.map((user) => (
+            ) : (
+              filteredUsers.map((user) => (
               <GroupUserItem
                 key={user._id}
                 user={user}
                 isSelected={selectedUsers.includes(user._id)}
                 onToggle={toggleUserSelection}
               />
-            ))
-          )}
+            )));
+          })()}
         </div>
 
         {isGroupMode && (

@@ -79,7 +79,7 @@ const ChatMessageBody = memo(({ message, onReply }: Props) => {
                 {isCurrentUser && isSent && (
                   <span className="flex items-center">
                     {isRead ? (
-                      <CheckCheck size={14} className="text-blue-500" />
+                      <CheckCheck size={14} className="text-cyan-500" />
                     ) : (
                       <Check size={14} className="text-gray-400" />
                     )}
