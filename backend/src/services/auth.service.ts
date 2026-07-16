@@ -23,6 +23,14 @@ export const registerService = async (body: RegisterSchemaType) => {
             password: hashedPassword,
             avatar: avatar ?? null,
         },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            createdAt: true,
+            updatedAt: true,
+        }
     });
     
     return newUser;
@@ -43,5 +51,6 @@ export const loginService = async (body: LoginType) => {
         throw new UnauthorizedException("Invalid email or password");
     }
     
-    return user;
+    const { password: _, ...safeUser } = user;
+    return safeUser;
 };

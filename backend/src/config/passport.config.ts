@@ -11,7 +11,7 @@ passport.use(
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
           const token = req?.cookies?.accessToken;
-          if (!token) throw new UnauthorizedException("Unauthorized access");
+          if (!token) return null;
           return token;
         },
       ]),

@@ -7,7 +7,7 @@ import { HTTPSTATUS } from "../config/http-config.js";
 
 export const registerController = asyncHandler(
   async (req: Request, res: Response) => {
-    const body = registerSchema.parse(req.body);
+    const body = req.body;
 
     const user = await registerService(body);
     const userId = user.id;
@@ -26,7 +26,7 @@ export const registerController = asyncHandler(
 
 export const loginController = asyncHandler(
   async (req: Request, res: Response) => {
-    const body = loginSchema.parse(req.body);
+    const body = req.body;
 
     const user = await loginService(body);
     const userId = user.id;
