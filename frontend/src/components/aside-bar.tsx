@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSocket } from "@/hooks/use-socket";
 import { useTheme } from "./theme-provider";
@@ -13,13 +14,34 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import AvatarWithBadge from "./avatar-with-badge";
+import { toast } from "sonner";
+import { Spinner } from "./ui/spinner";
+import { cn } from "@/lib/utils";
 
 const AsideBar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isUpdatingAvatar, updateAvatar } = useAuth();
   const { theme, setTheme } = useTheme();
   const { onlineUsers } = useSocket();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isOnline = isUserOnline(user?._id, onlineUsers);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateAvatar(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   return (
     <aside
@@ -73,20 +95,44 @@ const AsideBar = () => {
             />
           </Button>
 
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
           <DropdownMenu>
             <DropdownMenuTrigger className="outline-none border-none bg-transparent p-0 m-0 cursor-pointer">
-              <AvatarWithBadge
-                name={user?.name || "unKnown"}
-                src={user?.avatar || ""}
-                isOnline={isOnline}
-                className="bg-white!"
-              />
+              <div className="relative">
+                <AvatarWithBadge
+                  name={user?.name || "unKnown"}
+                  src={user?.avatar || ""}
+                  isOnline={isOnline}
+                  className={cn("bg-white!", isUpdatingAvatar && "opacity-50")}
+                />
+                {isUpdatingAvatar && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Spinner className="w-4 h-4 text-primary" />
+                  </div>
+                )}
+              </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-48 rounded-lg z-50"
-              align="end"
-            >
-              <div className="px-1.5 py-1 text-xs font-medium text-muted-foreground">My Account</div>
+            <DropdownMenuContent className="w-48 rounded-lg z-50" align="end">
+              <div className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
+                My Account
+              </div>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                Change Profile Picture
+              </DropdownMenuItem>
+              {user?.avatar && (
+                <DropdownMenuItem
+                  onClick={() => updateAvatar(null)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Remove Profile Picture
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

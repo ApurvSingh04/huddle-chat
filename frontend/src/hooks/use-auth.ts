@@ -10,11 +10,13 @@ interface AuthState {
   isLoggingIn: boolean;
   isSigningUp: boolean;
   isAuthStatusLoading: boolean;
+  isUpdatingAvatar: boolean;
 
   register: (data: RegisterType) => void;
   login: (data: LoginType) => void;
   logout: () => void;
   isAuthStatus: () => void;
+  updateAvatar: (avatarBase64: string | null) => Promise<void>;
 }
 
 //Without Persist
@@ -23,6 +25,7 @@ export const useAuth = create<AuthState>()((set) => ({
   isSigningUp: false,
   isLoggingIn: false,
   isAuthStatusLoading: false,
+  isUpdatingAvatar: false,
 
   register: async (data: RegisterType) => {
     set({ isSigningUp: true });
@@ -70,6 +73,18 @@ export const useAuth = create<AuthState>()((set) => ({
       set({ user: null });
     } finally {
       set({ isAuthStatusLoading: false });
+    }
+  },
+  updateAvatar: async (avatarBase64: string | null) => {
+    set({ isUpdatingAvatar: true });
+    try {
+      const response = await API.put("/user/avatar", { avatar: avatarBase64 });
+      set({ user: response.data.user });
+      toast.success(avatarBase64 ? "Profile picture updated" : "Profile picture removed");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update profile picture");
+    } finally {
+      set({ isUpdatingAvatar: false });
     }
   },
 }));
