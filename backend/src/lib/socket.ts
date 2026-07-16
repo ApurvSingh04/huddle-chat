@@ -157,8 +157,19 @@ function getIO() {
 
 export const logoutAllUserSockets = (userId: string) => {
   if (!io) return;
-  io.to(`user:${userId}`).emit("force:logout");
-  io.in(`user:${userId}`).disconnectSockets(true);
+  console.log(`[AUTH] Force logging out old sessions for user: ${userId}`);
+  
+  const oldSocketIds = Array.from(onlineUsers.get(userId) || []);
+  
+  for (const socketId of oldSocketIds) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.emit("force:logout");
+      setTimeout(() => {
+        socket.disconnect(true);
+      }, 1000);
+    }
+  }
 };
 
 export const emitNewChatToParticpants = (

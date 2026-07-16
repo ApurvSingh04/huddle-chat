@@ -53,9 +53,10 @@ export const loginService = async (body: LoginType) => {
     if (!isMatch) {
         throw new UnauthorizedException("Invalid email or password");
     }
+    const currentVersion = user.tokenVersion || 0;
     const updatedUser = await prisma.user.update({
         where: { id: user.id },
-        data: { tokenVersion: { increment: 1 } },
+        data: { tokenVersion: currentVersion + 1 },
     });
     
     logoutAllUserSockets(user.id);
