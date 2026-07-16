@@ -42,7 +42,6 @@ export const getSingleChatController = asyncHandler(
     const { chat, messages } = await getSingleChatService(id, userId);
 
     return res.status(HTTPSTATUS.OK).json({
-      message: "User chats retrieved successfully",
       chat,
       messages,
     });

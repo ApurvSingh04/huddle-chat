@@ -13,7 +13,7 @@ export const sendMessageController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
         message: "Message sent successfully",
-        data: result.message
+        userMessage: result.message
     });
   }
 );
