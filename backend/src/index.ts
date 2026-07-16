@@ -45,7 +45,7 @@ app.get(
 app.use("/api", appRoutes);
 
 if (Env.NODE_ENV === "production") {
-  const clientPath = path.resolve(process.cwd(), "../client/dist");
+  const clientPath = path.resolve(process.cwd(), "../frontend/dist");
 
   //Serve static files
   app.use(express.static(clientPath));
