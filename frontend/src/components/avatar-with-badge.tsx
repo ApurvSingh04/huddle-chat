@@ -1,4 +1,5 @@
 import groupImg from "@/assets/group-img.png";
+import aiAvatarImg from "@/assets/huddle-ai.png"; // <-- Make sure to put your image here
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,12 @@ const AvatarWithBadge = ({
   size = "w-9 h-9",
   className,
 }: Props) => {
-  const avatar = isGroup ? groupImg : src || "";
+  let avatar = src || "";
+  if (isGroup) {
+    avatar = groupImg;
+  } else if (name === "Huddle AI") {
+    avatar = aiAvatarImg;
+  }
 
   return (
     <div
