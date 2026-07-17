@@ -24,7 +24,6 @@ const ChatHeader = ({ chat, currentUserId }: Props) => {
 
   const isTyping = typingUsers[chat._id] && typingUsers[chat._id].length > 0;
   const displaySubheading = isTyping ? "typing..." : subheading;
-  const isTypingOrOnline = isTyping || isOnline;
 
   return (
     <div
