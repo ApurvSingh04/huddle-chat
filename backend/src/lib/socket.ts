@@ -25,11 +25,8 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
       const rawCookie = socket.handshake.headers.cookie;
-
-      if (!rawCookie) return next(new Error("Unauthorized"));
-
-      const match = rawCookie.match(/(?:^|;\s*)accessToken=([^;]+)/);
-      const token = match ? match[1] : null;
+      const match = rawCookie ? rawCookie.match(/(?:^|;\s*)accessToken=([^;]+)/) : null;
+      const token = socket.handshake.auth?.token || (match ? match[1] : null);
 
       if (!token) return next(new Error("Unauthorized"));
 

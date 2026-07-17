@@ -31,6 +31,9 @@ export const useAuth = create<AuthState>()((set) => ({
     set({ isSigningUp: true });
     try {
       const response = await API.post("/auth/register", data);
+      if (response.data.token) {
+        localStorage.setItem("accessToken", response.data.token);
+      }
       set({ user: response.data.user });
       useSocket.getState().connectSocket();
       toast.success("Register successfully");
@@ -44,6 +47,9 @@ export const useAuth = create<AuthState>()((set) => ({
     set({ isLoggingIn: true });
     try {
       const response = await API.post("/auth/login", data);
+      if (response.data.token) {
+        localStorage.setItem("accessToken", response.data.token);
+      }
       set({ user: response.data.user });
       useSocket.getState().connectSocket();
       toast.success("Login successfully");
@@ -56,6 +62,7 @@ export const useAuth = create<AuthState>()((set) => ({
   logout: async () => {
     try {
       await API.post("/auth/logout");
+      localStorage.removeItem("accessToken");
       set({ user: null });
       useSocket.getState().disconnectSocket();
       toast.success("Logout successfully");
@@ -70,6 +77,7 @@ export const useAuth = create<AuthState>()((set) => ({
       set({ user: response.data.user });
       useSocket.getState().connectSocket();
     } catch (err: any) {
+      localStorage.removeItem("accessToken");
       set({ user: null });
     } finally {
       set({ isAuthStatusLoading: false });

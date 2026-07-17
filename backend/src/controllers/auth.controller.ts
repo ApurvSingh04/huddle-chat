@@ -13,15 +13,18 @@ export const registerController = asyncHandler(
     const userId = user.id;
     const tokenVersion = user.tokenVersion;
 
-    return setJwtAuthCookie({
+    const { res: cookieRes, token } = setJwtAuthCookie({
       res,
       userId,
       tokenVersion,
-    })
+    });
+    
+    return cookieRes
       .status(HTTPSTATUS.CREATED)
       .json({
         message: "User created & login successfully",
         user,
+        token,
       });
   }
 );
@@ -34,15 +37,18 @@ export const loginController = asyncHandler(
     const userId = user.id;
     const tokenVersion = user.tokenVersion;
     
-    return setJwtAuthCookie({
+    const { res: cookieRes, token } = setJwtAuthCookie({
       res,
       userId,
       tokenVersion,
-    })
+    });
+    
+    return cookieRes
       .status(HTTPSTATUS.OK)
       .json({
         message: "User login successfully",
         user,
+        token,
       });
   }
 );

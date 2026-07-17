@@ -10,7 +10,7 @@ passport.use(
     {
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
-          const token = req?.cookies?.accessToken;
+          const token = req?.cookies?.accessToken || req?.headers?.authorization?.split(" ")[1];
           if (!token) return null;
           return token;
         },

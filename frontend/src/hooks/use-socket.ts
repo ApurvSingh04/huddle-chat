@@ -19,9 +19,13 @@ export const useSocket = create<SocketState>()((set, get) => ({
     console.log(socket, "socket");
     if (socket) return;
 
+    const token = localStorage.getItem("accessToken");
     const newSocket = io(BASE_URL, {
       withCredentials: true,
       autoConnect: true,
+      auth: {
+        token,
+      },
     });
 
     set({ socket: newSocket });
