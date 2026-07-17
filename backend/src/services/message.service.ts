@@ -1,4 +1,5 @@
 import { prisma } from "../config/database.config.js";
+import { Env } from "../config/env-config.js"
 import { BadRequestException } from "../utils/app-error.js";
 import type { SendMessageSchemaType } from "../validators/message.validator.js";
 import cloudinary from "../config/cloudinary.config.js";
@@ -6,6 +7,8 @@ import {
   emitLastMessageToParticipants,
   emitNewMessageToChatRoom,
 } from "../lib/socket.js";
+import {generateAiResponse } from "./ai.service.js"
+
 
 export const sendMessageService = async (
   userId: string,
@@ -33,7 +36,7 @@ export const sendMessageService = async (
     imageUrl = uploadRes.secure_url;
   }
 
-  const message = await prisma.message.create({
+  const userMessage = await prisma.message.create({
     data: {
       content: content || null,
       image: imageUrl,
@@ -60,13 +63,52 @@ export const sendMessageService = async (
   await prisma.chat.update({
     where: { id: chatId },
     data: {
-      lastMessageId: message.id,
+      lastMessageId: userMessage.id,
     },
   });
 
-  emitNewMessageToChatRoom(userId, chatId, message);
+  emitNewMessageToChatRoom(userId, chatId, userMessage);
   const allParticipantIds = chat.participantIds;
-  emitLastMessageToParticipants(allParticipantIds, chatId, message);
+  emitLastMessageToParticipants(allParticipantIds, chatId, userMessage);
+  
+  const aiUserId = Env.AI_USER_ID;
 
-  return { message };
+  if (aiUserId && chat.participantIds.includes(aiUserId) && userId !== aiUserId && content) {
+    const aiUser = await prisma.user.findUnique({
+      where: { id: aiUserId },
+      select: { id: true }
+    });
+
+    if (aiUser) {
+      processAiReply(chatId, content, aiUserId).catch((err) => {
+        console.error("Failed to process AI reply", err);
+      });
+    }
+  }
+
+  return { message: userMessage };
 };
+
+async function processAiReply(chatId: string, prompt: string, aiUserId: string) {
+  const aiTextResponse = await generateAiResponse(prompt);
+
+  const aiMessage = await prisma.message.create({
+    data: {
+      content: aiTextResponse,
+      chatId,
+      senderId: aiUserId,
+    },
+    include: {
+      sender: {
+        select: { id: true, name: true, avatar: true },
+      },
+    },
+  });
+
+  const chat = await prisma.chat.update({
+    where: { id: chatId },
+    data: { lastMessageId: aiMessage.id },
+  });
+  emitNewMessageToChatRoom(aiUserId, chatId, aiMessage);
+  emitLastMessageToParticipants(chat.participantIds, chatId, aiMessage);
+}
