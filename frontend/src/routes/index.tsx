@@ -1,5 +1,5 @@
 import BaseLayout from "@/layouts/base-layout";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import { authRoutesPaths, protectedRoutesPaths } from "./routes";
 import AppLayout from "@/layouts/app-layout";
 import RouteGuard from "./route-guard";
@@ -23,6 +23,7 @@ const AppRoutes = () => {
           ))}
         </Route>
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
