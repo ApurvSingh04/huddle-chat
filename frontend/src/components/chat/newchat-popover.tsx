@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { useChat } from "@/hooks/use-chat";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { ArrowLeft, PenBoxIcon, Search, UsersIcon } from "lucide-react";
+import { ArrowLeft, PenBoxIcon, Search, UsersIcon, Sparkles } from "lucide-react";
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,6 +13,8 @@ import type { UserType } from "../../types/auth.type";
 import AvatarWithBadge from "../avatar-with-badge";
 import { Checkbox } from "../ui/checkbox";
 import { useNavigate } from "react-router-dom";
+
+const AI_USER_ID = import.meta.env.VITE_AI_USER_ID;
 
 export const NewChatPopover = memo(() => {
   const navigate = useNavigate();
@@ -137,13 +139,16 @@ export const NewChatPopover = memo(() => {
           {isUsersLoading ? (
             <Spinner className="w-6 h-6" />
           ) : (() => {
-            const filteredUsers = users?.filter((u) => 
-              u.name.toLowerCase().includes(searchQuery.toLowerCase())
+            const aiUser = users?.find((u) => u._id === AI_USER_ID);
+            const regularUsers = users?.filter(
+              (u) => u._id !== AI_USER_ID && u.name.toLowerCase().includes(searchQuery.toLowerCase())
             ) || [];
             
-            if (filteredUsers.length === 0) {
+            const showAiItem = !isGroupMode && (!searchQuery || (aiUser && aiUser.name.toLowerCase().includes(searchQuery.toLowerCase())));
+
+            if (regularUsers.length === 0 && !showAiItem) {
               return (
-                <div className="text-center text-muted-foreground">
+                <div className="text-center text-muted-foreground py-4">
                   No users found
                 </div>
               );
@@ -155,25 +160,37 @@ export const NewChatPopover = memo(() => {
                   disabled={isCreatingChat}
                   onClick={() => setIsGroupMode(true)}
                 />
-                {filteredUsers.map((user) => (
-                <ChatUserItem
-                  key={user._id}
-                  user={user}
-                  isLoading={loadingUserId === user._id}
-                  disabled={loadingUserId !== null}
-                  onClick={handleCreateChat}
-                />
-              ))}
-            </>
+                
+                {showAiItem && (
+                  <AiChatUserItem
+                    disabled={loadingUserId !== null}
+                    isLoading={loadingUserId === AI_USER_ID}
+                    onClick={() => handleCreateChat(AI_USER_ID)}
+                  />
+                )}
+
+                {regularUsers.map((user) => (
+                  <ChatUserItem
+                    key={user._id}
+                    user={user}
+                    isLoading={loadingUserId === user._id}
+                    disabled={loadingUserId !== null}
+                    onClick={handleCreateChat}
+                  />
+                ))}
+              </>
             ) : (
-              filteredUsers.map((user) => (
-              <GroupUserItem
-                key={user._id}
-                user={user}
-                isSelected={selectedUsers.includes(user._id)}
-                onToggle={toggleUserSelection}
-              />
-            )));
+              <>
+                {regularUsers.map((user) => (
+                  <GroupUserItem
+                    key={user._id}
+                    user={user}
+                    isSelected={selectedUsers.includes(user._id)}
+                    onToggle={toggleUserSelection}
+                  />
+                ))}
+              </>
+            );
           })()}
         </div>
 
@@ -230,6 +247,33 @@ const NewGroupItem = memo(
 );
 
 NewGroupItem.displayName = "NewGroupItem";
+
+const AiChatUserItem = memo(
+  ({ disabled, isLoading, onClick }: { disabled: boolean; isLoading: boolean; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      className="relative w-full flex items-center
+       gap-2 p-3 rounded-md hover:bg-primary/10
+       transition-all duration-200 text-left disabled:opacity-50
+       bg-linear-to-r from-primary/5 to-transparent
+       border border-primary/10 shadow-sm mb-1 mt-1 hover:border-primary/30
+      "
+    >
+      <div className="bg-primary/20 p-2 rounded-full shadow-sm">
+        <Sparkles className="size-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h5 className="text-[14px] font-semibold text-primary truncate">
+          Chat with Huddle AI
+        </h5>
+        <p className="text-xs text-primary/80 truncate">Ask me anything! I am here to help.</p>
+      </div>
+      {isLoading && <Spinner className="absolute right-3 w-4 h-4 ml-auto text-primary" />}
+    </button>
+  )
+);
+AiChatUserItem.displayName = "AiChatUserItem";
 
 const ChatUserItem = memo(
   ({

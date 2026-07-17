@@ -26,15 +26,16 @@ export const getOtherUserAndGroup = (
   }
 
   const other = chat?.participants.find((p) => p._id !== currentUserId);
-  const isOnline = isUserOnline(other?._id ?? "", onlineUsers);
+  const isAiUser = other?._id === import.meta.env.VITE_AI_USER_ID;
+  const isOnline = isAiUser ? true : isUserOnline(other?._id ?? "", onlineUsers);
 
   return {
     name: other?.name || "Unknown",
-    subheading: isOnline ? "Online" : "Offline",
+    subheading: isAiUser ? "AI Assistant" : (isOnline ? "Online" : "Offline"),
     avatar: other?.avatar || "",
     isGroup: false,
     isOnline,
-    isAI: other?.isAI || false,
+    isAI: other?.isAI || isAiUser || false,
   };
 };
 

@@ -26,15 +26,12 @@ const ChatReplyBar = ({ replyTo, currentUserId, onCancel }: Props) => {
         bg-primary/10 rounded-md shadow-sm
         "
       >
-        <div className="flex-1">
-          <h5 className="font-medium">{senderName}</h5>
+        <div className="flex-1 min-w-0 pr-2">
+          <h5 className="font-medium truncate">{senderName}</h5>
           {replyTo?.image ? (
             <p className="text-muted-foreground">📷 Photo</p>
           ) : (
-            <p
-              className="max-w-4xl
-            truncate text-ellipsis"
-            >
+            <p className="truncate text-muted-foreground text-ellipsis">
               {replyTo.content}
             </p>
           )}

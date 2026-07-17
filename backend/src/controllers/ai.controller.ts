@@ -3,7 +3,7 @@ import { asyncHandler } from "../middlewares/asyncHandler.middleware.js";
 import { HTTPSTATUS } from "../config/http-config.js";
 import { prisma } from "../config/database.config.js";
 import { Env } from "../config/env-config.js";
-import bcrypt from "bcryptjs";
+import { hashValue } from "../utils/bcrypt.js";
 
 export const startAiChatController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -21,7 +21,7 @@ export const startAiChatController = asyncHandler(
 
     if (!aiUser) {
       const password = process.env.AI_USER_PASSWORD || "secure-random-password-123!";
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await hashValue(password, 10);
       
       aiUser = await prisma.user.create({
         data: {

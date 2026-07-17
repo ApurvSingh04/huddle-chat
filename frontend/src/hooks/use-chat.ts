@@ -150,15 +150,24 @@ export const useChat = create<ChatState>()((set, get) => ({
         replyToId: replyTo?._id,
       });
       const { userMessage } = data;
-      //replace the temp user message
       set((state) => {
         if (!state.singleChat) return state;
+        
+        const socketMessageAlreadyExists = state.singleChat.messages.some(
+          (m) => m._id === userMessage._id
+        );
+
         return {
           singleChat: {
             ...state.singleChat,
-            messages: state.singleChat.messages.map((msg) =>
-              msg._id === tempUserId ? userMessage : msg
-            ),
+            messages: state.singleChat.messages
+              .map((msg) => {
+                if (msg._id === tempUserId) {
+                  return socketMessageAlreadyExists ? null : userMessage;
+                }
+                return msg;
+              })
+              .filter(Boolean) as MessageType[],
           },
         };
       });
@@ -203,11 +212,18 @@ export const useChat = create<ChatState>()((set, get) => ({
   addNewMessage: (chatId, message) => {
     const chat = get().singleChat;
     if (chat?.chat._id === chatId) {
-      set({
-        singleChat: {
-          chat: chat.chat,
-          messages: [...chat.messages, message],
-        },
+      set((state) => {
+        if (!state.singleChat) return state;
+        // Deduplicate: ignore if we already have this message
+        if (state.singleChat.messages.some((m) => m._id === message._id)) {
+          return state;
+        }
+        return {
+          singleChat: {
+            chat: state.singleChat.chat,
+            messages: [...state.singleChat.messages, message],
+          },
+        };
       });
     }
   },

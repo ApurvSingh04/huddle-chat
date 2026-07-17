@@ -1,4 +1,5 @@
 import axios from "axios";
+import { mapIds } from "./helper";
 
 export const API = axios.create({
   baseURL:
@@ -9,22 +10,6 @@ export const API = axios.create({
 });
 
 API.interceptors.response.use((response) => {
-  const mapIds = (obj: any): any => {
-    if (Array.isArray(obj)) {
-      return obj.map(mapIds);
-    } else if (obj !== null && typeof obj === "object") {
-      const newObj: any = {};
-      for (const key in obj) {
-        newObj[key] = mapIds(obj[key]);
-        if (key === "id") {
-          newObj["_id"] = obj[key];
-        }
-      }
-      return newObj;
-    }
-    return obj;
-  };
-
   if (response.data) {
     response.data = mapIds(response.data);
   }
